@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Photo Frame Maker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 90%;
+        }
+        h1 {
+            color: #333;
+        }
+        #controls {
+            margin-bottom: 20px;
+        }
+        #uploadBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
+        #uploadBtn:hover {
+            background-color: #0056b3;
+        }
+        #imageInput {
+            display: none; /* Hide the default file input button */
+        }
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            max-width: 100%;
+            height: auto;
+        }
+        #downloadBtn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: #fff;
+            display: none; /* Hide initially */
+            transition: background-color 0.3s ease;
+        }
+        #downloadBtn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Create Your Framed Photo</h1>
+    <div id="controls">
+        <label for="imageInput" id="uploadBtn">Upload Your Image</label>
+        <input type="file" id="imageInput" accept="image/*">
+    </div>
+    
+    <canvas id="photoCanvas"></canvas>
+    
+    <button id="downloadBtn">Download Framed Image</button>
+</div>
+
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const photoCanvas = document.getElementById('photoCanvas');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const ctx = photoCanvas.getContext('2d');
+
+    // Load the frame image first
+    const frameImage = new Image();
+    // MAKE SURE your frame file is named 'frame.png' and in the same directory.
+    frameImage.src = 'frame.png'; 
+
+    let userImage = null;
+
+    // Handle user image upload
+    imageInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                userImage = new Image();
+                userImage.onload = () => {
+                    drawImages();
+                    downloadBtn.style.display = 'block';
+                };
+                userImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Draw both images on the canvas
+    const drawImages = () => {
+        if (!userImage) return;
+
+        // Set canvas dimensions to match the user's image, or a fixed size
+        const canvasWidth = userImage.width;
+        const canvasHeight = userImage.height;
+        photoCanvas.width = canvasWidth;
+        photoCanvas.height = canvasHeight;
+
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+        // 1. Draw the user's photo
+        ctx.drawImage(userImage, 0, 0, canvasWidth, canvasHeight);
+
+        // 2. Draw the frame on top
+        // Make sure the frame image dimensions match the canvas for a perfect overlay
+        ctx.drawImage(frameImage, 0, 0, canvasWidth, canvasHeight);
+    };
+
+    // Make sure the frame is loaded before we can draw anything
+    frameImage.onload = () => {
+        // You could draw a placeholder image here if you want
+        console.log("Frame image loaded successfully.");
+    };
+
+    // Handle download button click
+    downloadBtn.addEventListener('click', () => {
+        if (userImage) {
+            // Get the image data from the canvas
+            const dataURL = photoCanvas.toDataURL('image/png');
+            
+            // Create a temporary link element
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'framed-photo.png'; // File name for the downloaded image
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    });
+
+</script>
+
+</body>
+</html>
